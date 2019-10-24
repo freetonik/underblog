@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"flag"
 	"strconv"
 	"html/template"
 	"io/ioutil"
@@ -20,6 +21,17 @@ type Post struct {
 	Body template.HTML
 	Date time.Time
 	Slug string
+}
+
+func init() {
+	const AppVersion = "0.1.2"
+
+	version := flag.Bool("version", false, "prints current roxy version")
+	flag.Parse()
+	if *version {
+		fmt.Println(AppVersion)
+		os.Exit(0)
+	}
 }
 
 func main() {
