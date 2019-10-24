@@ -1,5 +1,17 @@
 # Underblog
 
+## Install
+
+On MacOS:
+
+```
+brew install freetonik/tap/underblog
+```
+
+Other platforms: coming soon. Or you can build yourself by cloning the repo and running `make build`.
+
+## How it works
+
 An extremely simple, fast static blog generator.
 
 **Step 1:** create the following folder structure:
