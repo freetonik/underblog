@@ -1,4 +1,4 @@
-# Shyblog
+# Underblog
 
 An extremely simple, fast static blog generator.
 
@@ -17,7 +17,7 @@ An extremely simple, fast static blog generator.
 
 (See [/example](example))
 
-**Step 2:** run `shyblog`.
+**Step 2:** run `underblog`.
 
 **Step 3:** Your site is generated in `public`.
 
