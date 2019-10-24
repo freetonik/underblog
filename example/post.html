@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/css/styles.css">
+    <title>{{ .Title }}</title>
+  </head>
+
+  <body>
+
+    <article class="container">
+      {{ .Body }}
+      <p>{{ .Date.Format "Jan 02, 2006" }}</p>
+    </article>
+
+  </body>
+
+</html>
