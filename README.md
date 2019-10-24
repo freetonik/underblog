@@ -48,6 +48,8 @@ There is no front-matter. **Date** and **slug** are derived from the filename. *
 - NO JavaScript
 - NO tags, categories, taxonomy
 - NO template lookup logic
+- NO plugins
+- NO dependencies
 
 ## Roadmap
 
