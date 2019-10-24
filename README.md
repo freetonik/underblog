@@ -1,5 +1,7 @@
 # Underblog
 
+An extremely simple, fast static blog generator.
+
 ## Install
 
 On MacOS:
@@ -12,11 +14,17 @@ Other platforms: coming soon. Or you can build yourself by cloning the repo and 
 
 ## How it works
 
-An extremely simple, fast static blog generator.
+You only need three things:
+1. `index.html` template for blog's index page.
+2. `post.html` template for single post.
+3. `markdown` folder.
+
+There is no front-matter. **Date** and **slug** are derived from the filename. **Title** is derived from the first line of markdown file. Make sure the first line starts with `#`.
 
 **Step 1:** create the following folder structure:
 
 ```
+.
 ├── css
 │   └── styles.css
 ├── markdown
