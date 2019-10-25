@@ -1,7 +1,7 @@
 all: build prepublish move
 
 build:
-	go build
+	GO111MODULE=on CGO_ENABLED=0 go build -mod=vendor -o underblog ./underblog.go
 
 move:
 	mv underblog release/ && mv underblog.tar.gz release/
