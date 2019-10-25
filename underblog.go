@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gopkg.in/russross/blackfriday.v2"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -13,7 +12,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"gopkg.in/russross/blackfriday.v2"
 )
 
 type Post struct {
@@ -36,29 +38,38 @@ func init() {
 
 func main() {
 	start := time.Now()
+	log.Print("Starting...")
 
-	fmt.Printf("Starting...\n")
-
-	var posts []Post
+	var posts []*Post
 
 	// Read markdown files folder
 	files, err := ioutil.ReadDir("./markdown/")
 	if err != nil {
-		fmt.Println("I need a folder named 'markdown' to continue")
-		log.Fatal(err)
+		log.Fatalf("I need a folder named 'markdown' to continue: %s", err)
 	}
+
+	wg := &sync.WaitGroup{}
 
 	// For each file, create HTML
 	for _, file := range files {
 		if path.Ext(file.Name()) == ".md" || path.Ext(file.Name()) == ".markdown" {
 			fmt.Println("Processing " + file.Name())
-			post := createPost(file.Name())
-			go createPostFile(post)
+			post, err := createPost(file.Name())
+			if err != nil {
+				log.Fatalf("Creating Post failed: %s", err)
+			}
+			wg.Add(1)
+			go func() {
+				if err := createPostFile(post); err != nil {
+					log.Fatalf("Creating Post file failed: %s", err)
+				}
+				wg.Done()
+			}()
 			posts = append(posts, post)
-			fmt.Println("Done with  " + file.Name())
-			fmt.Println("---")
+			log.Println("Done with  " + file.Name())
 		}
 	}
+	wg.Wait()
 
 	// Create blog root HTML
 	newpath := filepath.Join(".", "public")
@@ -67,21 +78,30 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	t, _ := template.ParseFiles("index.html")
-	t.Execute(f, posts)
+	t, err := template.ParseFiles("index.html")
+	if err != nil {
+		log.Fatalf("Failed to parse: %s", err)
+	}
+	if err := t.Execute(f, posts); err != nil {
+		log.Fatalf("Failed to execute template: %s", err)
+	}
 	f.Close()
 
 	// Copy styles
-	copyCssToPublicDir()
+	if err := copyCSSToPublicDir(); err != nil {
+		log.Fatalf("Failed to copy css: %s", err)
+	}
 
 	elapsed := time.Since(start)
 	log.Printf("Done in %s", elapsed)
 }
 
-func createPost(filename string) Post {
+func createPost(filename string) (*Post, error) {
 	// Get filename without extension
-	filenameBase := FnameWithoutExtension(filename)
-	VerifyFilenameBaseFormat(filenameBase)
+	filenameBase := fnameWithoutExtension(filename)
+	if err := verifyFilenameBaseFormat(filenameBase); err != nil {
+		return nil, err
+	}
 
 	// Get date and slug from filename
 	day := filenameBase[0:2]
@@ -89,106 +109,107 @@ func createPost(filename string) Post {
 	year := filenameBase[6:10]
 	date, err := time.Parse("02-01-2006", day+"-"+month+"-"+year)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	slug := filenameBase[11:]
 
 	// Get body from file
 	mdfile, err := os.Open("./markdown/" + filename)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+	defer mdfile.Close()
+
 	rawBytes, err := ioutil.ReadAll(mdfile)
 
 	// Get title from first line of file
 	lines := strings.Split(string(rawBytes), "\n")
 	title := strings.Replace(lines[0], "# ", "", -1)
 
-	mdfile.Close()
-
 	// Convert Markdown to HTML
 	html := blackfriday.Run(rawBytes)
 
 	// Create a Post struct
-	post := Post{
+	return &Post{
 		Title: title,
 		Body:  template.HTML(html),
 		Date:  date,
-		Slug:  slug}
-
-	return post
+		Slug:  slug,
+	}, nil
 }
 
-func createPostFile(post Post) {
+func createPostFile(post *Post) error {
 	// Create folder for HTML
 	newpath := filepath.Join("public/posts", post.Slug)
-	os.MkdirAll(newpath, os.ModePerm)
+	if err := os.MkdirAll(newpath, os.ModePerm); err != nil {
+		return err
+	}
 
 	// Create HTML file
 	f, err := os.Create("public/posts/" + post.Slug + "/" + "index.html")
 	if err != nil {
-		fmt.Println("Aaa!")
-		log.Fatal(err)
+		return err
 	}
+	defer f.Close()
 
 	// Generate final HTML file from template
-	t, _ := template.ParseFiles("post.html")
-	t.Execute(f, post)
-	f.Close()
+	t, err := template.ParseFiles("post.html")
+	if err != nil {
+		return err
+	}
+	return t.Execute(f, post)
 }
 
-func FnameWithoutExtension(fn string) string {
+func fnameWithoutExtension(fn string) string {
 	return strings.TrimSuffix(fn, path.Ext(fn))
 }
 
-func VerifyFilenameBaseFormat(f string) {
-	errorDescription := "I can't parse this filename. Make sure its name is formatted as: DD-MM-YYY-slug.md"
+func verifyFilenameBaseFormat(f string) error {
+	filenameRequirements := "Make sure its name is formatted as: DD-MM-YYY-slug.md"
 
 	if len(f) < 12 {
-		fmt.Println(errorDescription)
-		os.Exit(1)
+		return fmt.Errorf("Length of the file is too short. %s", filenameRequirements)
 	}
 
 	// day is int?
 	_, err := strconv.Atoi(f[0:2])
 	if err != nil {
-		fmt.Println(errorDescription)
-		os.Exit(1)
+		return fmt.Errorf("Day doesn't look right. %s", filenameRequirements)
 	}
 
 	// month is int?
 	_, err2 := strconv.Atoi(f[3:5])
 	if err2 != nil {
-		fmt.Println(errorDescription)
-		os.Exit(1)
+		return fmt.Errorf("Month doesn't look right. %s", filenameRequirements)
 	}
 
 	// year is int?
 	_, err3 := strconv.Atoi(f[6:10])
 	if err3 != nil {
-		fmt.Println(errorDescription)
-		os.Exit(1)
+		return fmt.Errorf("Year doesn't look right. %s", filenameRequirements)
 	}
+
+	return nil
 }
 
-func copyCssToPublicDir() {
+func copyCSSToPublicDir() error {
 	from, err := os.Open("./css/styles.css")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer from.Close()
 
 	newpath := filepath.Join("public", "css")
-	os.MkdirAll(newpath, os.ModePerm)
+	if err := os.MkdirAll(newpath, os.ModePerm); err != nil {
+		return err
+	}
 
 	to, err := os.OpenFile("./public/css/styles.css", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer to.Close()
 
 	_, err = io.Copy(to, from)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }
