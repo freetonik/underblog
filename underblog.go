@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -53,27 +54,38 @@ func main() {
 	}
 
 	// For each file, create HTML
+	wg := &sync.WaitGroup{}
 	for _, file := range files {
 		if isFileValid(file) {
 			fmt.Println("Processing " + file.Name())
+
+			wg.Add(1)
 			post := createPost(file.Name())
-			go createPostFile(post)
+			go createPostFile(post, wg)
+
 			posts = append(posts, post)
+
 			fmt.Println("Done with  " + file.Name())
 			fmt.Println("---")
 		}
 	}
+	wg.Wait()
 
 	// Create blog root HTML
-	newpath := filepath.Join(".", "public")
-	os.MkdirAll(newpath, os.ModePerm)
+	newPath := filepath.Join(".", "public")
+	_ = os.MkdirAll(newPath, os.ModePerm)
+
 	f, err := os.Create("public/index.html")
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	t, _ := template.ParseFiles("index.html")
-	t.Execute(f, posts)
-	f.Close()
+	err = t.Execute(f, posts)
+	if err != nil {
+		log.Fatalf("can't execute template: %v", err)
+	}
+	_ = f.Close()
 
 	// Copy styles
 	copyCssToPublicDir()
@@ -108,7 +120,7 @@ func createPost(filename string) Post {
 	lines := strings.Split(string(rawBytes), "\n")
 	title := strings.Replace(lines[0], "# ", "", -1)
 
-	mdfile.Close()
+	_ = mdfile.Close()
 
 	// Convert Markdown to HTML
 	html := blackfriday.Run(rawBytes)
@@ -118,15 +130,17 @@ func createPost(filename string) Post {
 		Title: title,
 		Body:  template.HTML(html),
 		Date:  date,
-		Slug:  slug}
+		Slug:  slug,
+	}
 
 	return post
 }
 
-func createPostFile(post Post) {
+func createPostFile(post Post, wg *sync.WaitGroup) {
+	defer wg.Done()
 	// Create folder for HTML
-	newpath := filepath.Join("public/posts", post.Slug)
-	os.MkdirAll(newpath, os.ModePerm)
+	newPath := filepath.Join("public/posts", post.Slug)
+	_ = os.MkdirAll(newPath, os.ModePerm)
 
 	// Create HTML file
 	f, err := os.Create("public/posts/" + post.Slug + "/" + "index.html")
@@ -137,8 +151,11 @@ func createPostFile(post Post) {
 
 	// Generate final HTML file from template
 	t, _ := template.ParseFiles("post.html")
-	t.Execute(f, post)
-	f.Close()
+	err = t.Execute(f, post)
+	if err != nil {
+		log.Fatalf("can't execute template: %v", err)
+	}
+	_ = f.Close()
 }
 
 func FnameWithoutExtension(fn string) string {
@@ -180,19 +197,20 @@ func copyCssToPublicDir() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer from.Close()
 
-	newpath := filepath.Join("public", "css")
-	os.MkdirAll(newpath, os.ModePerm)
+	newPath := filepath.Join("public", "css")
+	_ = os.MkdirAll(newPath, os.ModePerm)
 
 	to, err := os.OpenFile("./public/css/styles.css", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer to.Close()
 
 	_, err = io.Copy(to, from)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	_ = from.Close()
+	_ = to.Close()
 }
