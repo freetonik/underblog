@@ -34,6 +34,10 @@ func init() {
 	}
 }
 
+func isFileValid(file os.FileInfo) bool {
+	return path.Ext(file.Name()) == ".md" || path.Ext(file.Name()) == ".markdown"
+}
+
 func main() {
 	start := time.Now()
 
@@ -50,7 +54,7 @@ func main() {
 
 	// For each file, create HTML
 	for _, file := range files {
-		if path.Ext(file.Name()) == ".md" || path.Ext(file.Name()) == ".markdown" {
+		if isFileValid(file) {
 			fmt.Println("Processing " + file.Name())
 			post := createPost(file.Name())
 			go createPostFile(post)
