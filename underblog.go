@@ -31,7 +31,7 @@ func init() {
 	version := flag.Bool("version", false, "prints current roxy version")
 	flag.Parse()
 	if *version {
-		fmt.Println(AppVersion)
+		log.Print(AppVersion)
 		os.Exit(0)
 	}
 }
@@ -53,7 +53,7 @@ func main() {
 	// For each file, create HTML
 	for _, file := range files {
 		if path.Ext(file.Name()) == ".md" || path.Ext(file.Name()) == ".markdown" {
-			fmt.Println("Processing " + file.Name())
+			log.Printf("Processing %s", file.Name())
 			post, err := createPost(file.Name())
 			if err != nil {
 				log.Fatalf("Creating Post failed: %s", err)
