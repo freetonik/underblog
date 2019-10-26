@@ -15,7 +15,7 @@ func GetCLIOptions() Opts {
 	//  - [] add path to "./markdown/" as cli args,
 	//    https://github.com/freetonik/underblog/issues/10
 
-	version := flag.Bool("version", false, "prints current roxy version")
+	version := flag.Bool("version", false, "prints current version")
 	flag.Parse()
 	return Opts{
 		Version: *version,
