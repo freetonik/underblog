@@ -24,6 +24,8 @@ func NewBlog(opts internal.Opts) *Blog {
 	b.opts = opts
 
 	b.mux = &sync.Mutex{}
+	b.wg = &sync.WaitGroup{}
+
 	b.files = make(chan os.FileInfo)
 
 	return b
@@ -38,6 +40,7 @@ type Blog struct {
 	indexPage io.Writer
 
 	mux *sync.Mutex
+	wg *sync.WaitGroup
 }
 
 // Render process md files and create index.html and all posts
@@ -85,11 +88,14 @@ func (b *Blog) startWorker(ctx context.Context) {
 		case file, ok := <-b.files:
 			if !ok || !isFileValid(file) {
 				// todo: catch it?
+				b.wg.Done()
 				return
 			}
 			b.addPost(NewPost(file.Name()))
+			b.wg.Done()
 		}
 	}
+
 }
 
 func (b *Blog) getMdFiles() []os.FileInfo {
@@ -110,6 +116,7 @@ func (b *Blog) createPosts() {
 	wLimit := internal.GetWorkersLimit(len(files))
 
 	for i := 0; i < wLimit; i++ {
+		b.wg.Add(1)
 		go b.startWorker(ctx)
 	}
 
@@ -145,6 +152,7 @@ func (b *Blog) copyCssToPublicDir() {
 
 func (b *Blog) renderMd() error {
 	t, _ := template.ParseFiles("index.html")
+	b.wg.Wait() // wait until b.posts is populated
 	err := t.Execute(b.indexPage, b.posts)
 	if err != nil {
 		log.Fatalf("can't execute template: %v", err)
