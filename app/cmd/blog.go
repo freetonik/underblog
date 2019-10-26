@@ -114,9 +114,9 @@ func (b *Blog) createPosts() {
 	files := b.getMdFiles()
 
 	wLimit := internal.GetWorkersLimit(len(files))
+	b.wg.Add(len(files))
 
 	for i := 0; i < wLimit; i++ {
-		b.wg.Add(1)
 		go b.startWorker(ctx)
 	}
 
