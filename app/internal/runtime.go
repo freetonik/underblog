@@ -22,26 +22,20 @@ func setRLimit(cur, max uint64) error {
 // todo: cleanup required
 func GetWorkersLimit(qSize int) int {
 
+	limit := defaultWLimit
+
 	var rLimit syscall.Rlimit
-	var limit int
-
-	if qSize < defaultWLimit {
-		limit = qSize
-	}
-
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
 		log.Println("[ERROR]: error getting Rlimit")
-		log.Printf("[DEBUG] wLimit: %d", limit)
 		return limit
 	}
 
-	if qSize < int(rLimit.Cur) {
+	limit = int(rLimit.Cur / 2)
+
+	if qSize < limit {
 		limit = qSize
-	} else {
-		limit = int(rLimit.Cur / 2)
 	}
 
-	log.Printf("[DEBUG] wLimit: %d", limit)
 	return limit
 }
