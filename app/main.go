@@ -25,7 +25,7 @@ func main() {
 	fmt.Printf("Starting...\n")
 	err := cmd.MakeBlog(opts)
 	if err != nil {
-		log.Fatalf("can't make a blog: %v", err)
+		log.Fatalf("Can't make a blog: %v", err)
 	}
 
 	elapsed := time.Since(start)
