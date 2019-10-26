@@ -74,7 +74,6 @@ func (post *Post) createFile() {
 	// Create HTML file
 	f, err := os.Create("public/posts/" + post.Slug + "/" + "index.html")
 	if err != nil {
-		fmt.Println("Aaa!")
 		log.Fatal(err)
 	}
 
