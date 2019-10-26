@@ -17,7 +17,7 @@ import (
 
 const DefaultMarkdownPath = "./markdown/"
 
-// NewBlog create and init Blog
+// Create and initialize Blog
 func NewBlog(opts internal.Opts) *Blog {
 	b := new(Blog)
 
@@ -31,7 +31,7 @@ func NewBlog(opts internal.Opts) *Blog {
 	return b
 }
 
-// Blog is options and blog creating methods
+// Blog options and blog creating methods
 type Blog struct {
 	opts internal.Opts
 
@@ -43,7 +43,7 @@ type Blog struct {
 	wg *sync.WaitGroup
 }
 
-// Render process md files and create index.html and all posts
+// Render md-files->HTML, generate root index.html
 func (b *Blog) Render() error {
 	b.indexPage = b.getIndexPage(b.opts.Path)
 	b.createPosts()
@@ -68,13 +68,13 @@ func (b *Blog) getIndexPage(currentPath string) io.Writer {
 	p := filepath.Join(rootPath, "public")
 	err := os.MkdirAll(p, os.ModePerm)
 	if err != nil {
-		log.Fatal(errors.New(fmt.Sprintf("can't create public dir: %v", err)))
+		log.Fatal(errors.New(fmt.Sprintf("Can't create public dir: %v", err)))
 	}
 
 	f, err := os.Create("public/index.html")
 
 	if err != nil {
-		log.Fatal(errors.New(fmt.Sprintf("can't create public/index.html: %v", err)))
+		log.Fatal(errors.New(fmt.Sprintf("Can't create public/index.html: %v", err)))
 	}
 
 	return f
@@ -101,7 +101,7 @@ func (b *Blog) startWorker(ctx context.Context) {
 func (b *Blog) getMdFiles() []os.FileInfo {
 	files, err := ioutil.ReadDir(DefaultMarkdownPath)
 	if err != nil {
-		fmt.Println("can't get dir with markdown")
+		fmt.Println("Can't get directory of markdown files")
 		log.Fatal(err)
 	}
 	return files
