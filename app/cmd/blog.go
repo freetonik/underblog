@@ -1,0 +1,158 @@
+package cmd
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/freetonik/underblog/app/internal"
+	"html/template"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
+	"path/filepath"
+	"sync"
+)
+
+const DefaultMarkdownPath = "./markdown/"
+
+// NewBlog create and init Blog
+func NewBlog(opts internal.Opts) *Blog {
+	b := new(Blog)
+
+	b.opts = opts
+
+	b.mux = &sync.Mutex{}
+	b.files = make(chan os.FileInfo)
+
+	return b
+}
+
+// Blog is options and blog creating methods
+type Blog struct {
+	opts internal.Opts
+
+	files     chan os.FileInfo
+	posts     []Post
+	indexPage io.Writer
+
+	mux *sync.Mutex
+}
+
+// Render process md files and create index.html and all posts
+func (b *Blog) Render() error {
+	b.indexPage = b.getIndexPage(b.opts.Path)
+	b.createPosts()
+	err := b.renderMd()
+	b.copyCssToPublicDir()
+
+	return err
+}
+
+func (b *Blog) addPost(post Post) {
+	b.mux.Lock()
+	b.posts = append(b.posts, post)
+	b.mux.Unlock()
+}
+
+func (b *Blog) getIndexPage(currentPath string) io.Writer {
+	rootPath := "."
+
+	if currentPath != "" {
+		rootPath = currentPath
+	}
+	p := filepath.Join(rootPath, "public")
+	err := os.MkdirAll(p, os.ModePerm)
+	if err != nil {
+		log.Fatal(errors.New(fmt.Sprintf("can't create public dir: %v", err)))
+	}
+
+	f, err := os.Create("public/index.html")
+
+	if err != nil {
+		log.Fatal(errors.New(fmt.Sprintf("can't create public/index.html: %v", err)))
+	}
+
+	return f
+}
+
+func (b *Blog) startWorker(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case file, ok := <-b.files:
+			if !ok || !isFileValid(file) {
+				// todo: catch it?
+				return
+			}
+			b.addPost(NewPost(file.Name()))
+		}
+	}
+}
+
+func (b *Blog) getMdFiles() []os.FileInfo {
+	files, err := ioutil.ReadDir(DefaultMarkdownPath)
+	if err != nil {
+		fmt.Println("can't get dir with markdown")
+		log.Fatal(err)
+	}
+	return files
+}
+
+func (b *Blog) createPosts() {
+	ctx := context.Background()
+
+	filesChan := make(chan os.FileInfo)
+	files := b.getMdFiles()
+
+	wLimit := internal.GetWorkersLimit(len(files))
+
+	for i := 0; i < wLimit; i++ {
+		go b.startWorker(ctx)
+	}
+
+	for _, file := range files {
+		b.files <- file
+	}
+
+	close(filesChan)
+}
+
+func (b *Blog) copyCssToPublicDir() {
+	from, err := os.Open("./css/styles.css")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	newPath := filepath.Join("public", "css")
+	_ = os.MkdirAll(newPath, os.ModePerm)
+
+	to, err := os.OpenFile("./public/css/styles.css", os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = io.Copy(to, from)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_ = from.Close()
+	_ = to.Close()
+}
+
+func (b *Blog) renderMd() error {
+	t, _ := template.ParseFiles("index.html")
+	err := t.Execute(b.indexPage, b.posts)
+	if err != nil {
+		log.Fatalf("can't execute template: %v", err)
+	}
+	// todo: should i close file interface?
+	return nil
+}
+
+func isFileValid(file os.FileInfo) bool {
+	return path.Ext(file.Name()) == ".md" || path.Ext(file.Name()) == ".markdown"
+}
