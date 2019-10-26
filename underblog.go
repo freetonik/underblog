@@ -10,13 +10,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"gopkg.in/russross/blackfriday.v2"
 )
+
+var dateLayout = "2006-01-02"
 
 type Post struct {
 	Title string
@@ -29,6 +30,7 @@ func init() {
 	const AppVersion = "0.1.2"
 
 	version := flag.Bool("version", false, "prints current roxy version")
+	flag.StringVar(&dateLayout, "date-layout", dateLayout, "date layout for file names")
 	flag.Parse()
 	if *version {
 		log.Print(AppVersion)
@@ -104,10 +106,7 @@ func createPost(filename string) (*Post, error) {
 	}
 
 	// Get date and slug from filename
-	day := filenameBase[0:2]
-	month := filenameBase[3:5]
-	year := filenameBase[6:10]
-	date, err := time.Parse("02-01-2006", day+"-"+month+"-"+year)
+	date, err := time.Parse(dateLayout, filenameBase[0:len(dateLayout)])
 	if err != nil {
 		return nil, err
 	}
@@ -165,30 +164,18 @@ func fnameWithoutExtension(fn string) string {
 }
 
 func verifyFilenameBaseFormat(f string) error {
-	filenameRequirements := "Make sure its name is formatted as: DD-MM-YYY-slug.md"
+	filenameRequirements := fmt.Sprintf(
+		"Make sure file name is formatted as %s-slug.md",
+		dateLayout)
 
 	if len(f) < 12 {
-		return fmt.Errorf("Length of the file is too short. %s", filenameRequirements)
+		return fmt.Errorf("The name of the file is too short. %s", filenameRequirements)
 	}
 
-	// day is int?
-	_, err := strconv.Atoi(f[0:2])
+	_, err := time.Parse(dateLayout, f[0:len(dateLayout)])
 	if err != nil {
-		return fmt.Errorf("Day doesn't look right. %s", filenameRequirements)
+		return fmt.Errorf("Date of the file doesn't look right. %s", filenameRequirements)
 	}
-
-	// month is int?
-	_, err2 := strconv.Atoi(f[3:5])
-	if err2 != nil {
-		return fmt.Errorf("Month doesn't look right. %s", filenameRequirements)
-	}
-
-	// year is int?
-	_, err3 := strconv.Atoi(f[6:10])
-	if err3 != nil {
-		return fmt.Errorf("Year doesn't look right. %s", filenameRequirements)
-	}
-
 	return nil
 }
 
