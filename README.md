@@ -14,9 +14,11 @@ Other platforms: coming soon. Or you can build yourself by cloning the repo and 
 
 ## How it works
 
-You only need three things:
+You only need 4 things:
+
 1. `index.html` template for blog's index page.
 2. `post.html` template for single post.
+3. `css/styles.css` for CSS styles.
 3. `markdown` folder.
 
 There is no front-matter. **Date** and **slug** are derived from the filename. **Title** is derived from the first line of markdown file. Make sure the first line starts with `#`.
