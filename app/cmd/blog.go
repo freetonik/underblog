@@ -45,6 +45,10 @@ type Blog struct {
 
 // Render md-files->HTML, generate root index.html
 func (b *Blog) Render() error {
+	if err := b.verifyMarkdownPresent(); err != nil {
+		log.Fatal(errors.New(fmt.Sprintf("Markdown directory is not found: %v", err)))
+	}
+
 	b.indexPage = b.getIndexPage(b.opts.Path)
 	b.createPosts()
 	err := b.renderMd()
@@ -158,6 +162,13 @@ func (b *Blog) renderMd() error {
 		log.Fatalf("can't execute template: %v", err)
 	}
 	// todo: should i close file interface?
+	return nil
+}
+
+func (b *Blog) verifyMarkdownPresent() error {
+	if _, err := os.Stat(DefaultMarkdownPath); os.IsNotExist(err) {
+		return err
+	}
 	return nil
 }
 
