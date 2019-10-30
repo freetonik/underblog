@@ -1,3 +1,6 @@
+// +build linux darwin
+// +build !windows
+
 package internal
 
 import (
