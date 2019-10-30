@@ -1,0 +1,5 @@
+*
+!app
+!vendor
+!go.mod
+!go.sum

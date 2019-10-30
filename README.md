@@ -10,6 +10,12 @@ On MacOS:
 brew install freetonik/tap/underblog
 ```
 
+Docker:
+
+```
+docker run --rm -it -v /path/to/your/blog:/blog freetonik/underblog
+```
+
 Other platforms: coming soon. Or you can build yourself by cloning the repo and running `make build`.
 
 ## How it works
