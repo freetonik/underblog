@@ -36,9 +36,9 @@ There is no front-matter. **Date** and **slug** are derived from the filename. *
 ├── css
 │   └── styles.css
 ├── markdown
-│   └── DD-MM-YYYY-Slug_1.md
-│   └── DD-MM-YYYY-Slug_2.md
-│   └── DD-MM-YYYY-Slug_3.md
+│   └── YYYY-MM-DD-Slug_1.md
+│   └── YYYY-MM-DD-Slug_2.md
+│   └── YYYY-MM-DD-Slug_3.md
 ├── index.html
 ├── post.html
 ```
