@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/freetonik/underblog.svg?branch=master)](https://travis-ci.org/freetonik/underblog)
+
 # Underblog
 
 An extremely simple, fast static blog generator.
