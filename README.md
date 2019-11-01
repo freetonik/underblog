@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/freetonik/underblog.svg?branch=master)](https://travis-ci.org/freetonik/underblog)
+![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/freetonik/underblog)
 
 # Underblog
 
@@ -18,7 +19,9 @@ Docker:
 docker run --rm -it -v /path/to/your/blog:/blog freetonik/underblog
 ```
 
-Other platforms: coming soon. Or you can build yourself by cloning the repo and running `make build`.
+Windows:
+
+Go to [releases](https://github.com/freetonik/underblog/releases) and download the latest binary marked "windows".
 
 ## How it works
 
@@ -67,3 +70,11 @@ There is no front-matter. **Date** and **slug** are derived from the filename. *
 - [ ] RSS generation
 - [ ] Syntax highlighting for code with Chroma
 - [ ] live preview server (?)
+
+---
+
+## Building
+
+In the root repository do:
+
+`make build`
