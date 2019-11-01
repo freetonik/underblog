@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var revision = "0.2"
+var revision = "0.2.2"
 
 func main() {
 	fmt.Printf("Underblog %s\n", revision)

@@ -20,10 +20,10 @@ func NewPost(filename string) Post {
 	verifyFilenameBaseFormat(filenameBase)
 
 	// Get date and slug from filename
-	day := filenameBase[0:2]
-	month := filenameBase[3:5]
-	year := filenameBase[6:10]
-	date, err := time.Parse("02-01-2006", day+"-"+month+"-"+year)
+	year := filenameBase[0:4]
+	month := filenameBase[5:7]
+	day := filenameBase[8:10]
+	date, err := time.Parse("2006-01-02", year+"-"+month+"-"+day)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,23 +98,26 @@ func verifyFilenameBaseFormat(f string) {
 		os.Exit(1)
 	}
 
-	// day is int?
-	_, err := strconv.Atoi(f[0:2])
-	if err != nil {
+	// 2019-10-24-Slug.md
+	//[0   45 78 10]
+
+	// year is int?
+	_, err3 := strconv.Atoi(f[0:4])
+	if err3 != nil {
 		fmt.Println(errorDescription)
 		os.Exit(1)
 	}
 
 	// month is int?
-	_, err2 := strconv.Atoi(f[3:5])
+	_, err2 := strconv.Atoi(f[5:7])
 	if err2 != nil {
 		fmt.Println(errorDescription)
 		os.Exit(1)
 	}
 
-	// year is int?
-	_, err3 := strconv.Atoi(f[6:10])
-	if err3 != nil {
+	// day is int?
+	_, err := strconv.Atoi(f[8:10])
+	if err != nil {
 		fmt.Println(errorDescription)
 		os.Exit(1)
 	}
