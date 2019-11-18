@@ -37,3 +37,6 @@ release:
 	-mkdir -p $(BUILD_DIR)
 	GOOS=$(GOOS) GOARCH=$(GOARCH) GO111MODULE=on CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(NAME)$(ext) ./app/main.go
 	cd release ; $(archiveCmd)
+
+install: all
+	cp release/$(NAME) $(GOPATH)/bin/
