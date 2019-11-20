@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/sourcegraph/syntaxhighlight"
 	"gopkg.in/russross/blackfriday.v2"
 	"html/template"
 	"io/ioutil"
@@ -44,11 +47,12 @@ func NewPost(filename string) Post {
 
 	// Convert Markdown to HTML
 	html := blackfriday.Run(rawBytes)
+	bodyWithHighlighting, err := HighlightCode(html)
 
 	// Create a Post struct
 	post := Post{
 		Title: title,
-		Body:  template.HTML(html),
+		Body:  template.HTML(bodyWithHighlighting),
 		Date:  date,
 		Slug:  slug,
 	}
@@ -57,6 +61,30 @@ func NewPost(filename string) Post {
 	post.createFile()
 
 	return post
+}
+
+func HighlightCode(input []byte) ([]byte, error) {
+	byteReader := bytes.NewReader(input)
+	doc, err := goquery.NewDocumentFromReader(byteReader)
+	if err != nil {
+		return []byte(""), err
+	}
+	// find code-parts via css selector and replace them with highlighted versions
+	doc.Find("code[class*=\"language-\"]").Each(func(i int, s *goquery.Selection) {
+		oldCode := s.Text()
+		formatted, err := syntaxhighlight.AsHTML([]byte(oldCode))
+		if err != nil {
+			log.Fatal(err)
+		}
+		s.SetHtml(string(formatted))
+	})
+	output, err := doc.Html()
+	if err != nil {
+		return []byte{}, err
+	}
+	output = strings.Replace(output, "<html><head></head><body>", "", 1)
+	output = strings.Replace(output, "</body></html>", "", 1)
+	return []byte(output), nil
 }
 
 type Post struct {
