@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"sync"
 )
 
@@ -36,11 +37,11 @@ type Blog struct {
 	opts internal.Opts
 
 	files     chan os.FileInfo
-	posts     []Post
+	Posts     []Post
 	indexPage io.Writer
 
 	mux *sync.Mutex
-	wg *sync.WaitGroup
+	wg  *sync.WaitGroup
 }
 
 // Render md-files->HTML, generate root index.html
@@ -59,7 +60,7 @@ func (b *Blog) Render() error {
 
 func (b *Blog) addPost(post Post) {
 	b.mux.Lock()
-	b.posts = append(b.posts, post)
+	b.Posts = append(b.Posts, post)
 	b.mux.Unlock()
 }
 
@@ -156,13 +157,20 @@ func (b *Blog) copyCssToPublicDir() {
 
 func (b *Blog) renderMd() error {
 	t, _ := template.ParseFiles("index.html")
-	b.wg.Wait() // wait until b.posts is populated
-	err := t.Execute(b.indexPage, b.posts)
+	b.wg.Wait() // wait until b.Posts is populated
+	b.SortPosts()
+	err := t.Execute(b.indexPage, b.Posts)
 	if err != nil {
 		log.Fatalf("can't execute template: %v", err)
 	}
 	// todo: should i close file interface?
 	return nil
+}
+
+func (b *Blog) SortPosts() {
+	sort.Slice(b.Posts, func(i, j int) bool {
+		return b.Posts[i].Date.Unix() > b.Posts[j].Date.Unix()
+	})
 }
 
 func (b *Blog) verifyMarkdownPresent() error {
