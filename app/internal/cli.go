@@ -17,7 +17,7 @@ func GetCLIOptions() Opts {
 	//    https://github.com/freetonik/underblog/issues/10
 
 	version := flag.Bool("version", false, "prints current version")
-	watchMode := flag.Bool("watch", false, "launchs in watch mode")
+	watchMode := flag.Bool("watch", false, "launches in watch mode")
 
 	flag.Parse()
 
