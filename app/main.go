@@ -24,14 +24,11 @@ func main() {
 	if opts.WatchMode {
 		fmt.Println("Starting in watch mode...")
 		go makeBlog(opts)
+		go internal.WatchForChangedFiles(func() { makeBlog(opts) })
+		internal.RunDevelopmentWebserver()
 	} else {
 		fmt.Println("Starting...")
 		makeBlog(opts)
-	}
-
-	if opts.WatchMode {
-		go internal.WatchForChangedFiles(func() { makeBlog(opts) })
-		internal.RunDevelopmentWebserver()
 	}
 }
 
