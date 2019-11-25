@@ -15,6 +15,7 @@ func main() {
 	fmt.Printf("Underblog %s\n", revision)
 
 	opts := internal.GetCLIOptions()
+
 	if opts.Version {
 		fmt.Printf("Current ver.: %s\n", revision)
 		os.Exit(0)
@@ -22,7 +23,12 @@ func main() {
 
 	start := time.Now()
 
-	fmt.Printf("Starting...\n")
+	if opts.WatchMode {
+		fmt.Println("Starting Underblog in watch mode...")
+	} else {
+		fmt.Println("Starting...")
+	}
+
 	err := cmd.MakeBlog(opts)
 	if err != nil {
 		log.Fatalf("Can't make a blog: %v", err)
