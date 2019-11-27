@@ -15,19 +15,29 @@ func main() {
 	fmt.Printf("Underblog %s\n", revision)
 
 	opts := internal.GetCLIOptions()
+
 	if opts.Version {
 		fmt.Printf("Current ver.: %s\n", revision)
 		os.Exit(0)
 	}
 
-	start := time.Now()
+	if opts.WatchMode {
+		fmt.Println("Starting in watch mode...")
+		go makeBlog(opts)
+		go internal.WatchForChangedFiles(func() { makeBlog(opts) })
+		internal.RunDevelopmentWebserver()
+	} else {
+		fmt.Println("Starting...")
+		makeBlog(opts)
+	}
+}
 
-	fmt.Printf("Starting...\n")
+func makeBlog(opts internal.Opts) {
+	start := time.Now()
 	err := cmd.MakeBlog(opts)
 	if err != nil {
 		log.Fatalf("Can't make a blog: %v", err)
 	}
-
 	elapsed := time.Since(start)
 	log.Printf("Done in %s", elapsed)
 }
