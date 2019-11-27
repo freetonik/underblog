@@ -15,6 +15,8 @@ endif
 all: build test targz sha move
 
 build:
+	go get -t ./...
+	go mod vendor
 	GO111MODULE=on CGO_ENABLED=0 go build -mod=vendor -o underblog ./app/main.go
 
 test:
@@ -40,3 +42,6 @@ release:
 
 install: all
 	cp release/$(NAME) $(GOPATH)/bin/
+
+build-docker:
+	docker build -t freetonik/underblog .
