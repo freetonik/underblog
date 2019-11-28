@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"gopkg.in/russross/blackfriday.v2"
 	"html/template"
@@ -9,49 +10,31 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
 
 func NewPost(filename string) Post {
-	// Get filename without extension
-	filenameBase := fNameWithoutExtension(filename)
-	verifyFilenameBaseFormat(filenameBase)
-
-	// Get date and slug from filename
-	year := filenameBase[0:4]
-	month := filenameBase[5:7]
-	day := filenameBase[8:10]
-	date, err := time.Parse("2006-01-02", year+"-"+month+"-"+day)
+	post, err := ExtractMetaFromFilename(filename)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
-	slug := filenameBase[11:]
 
-	// Get body from file
 	mdfile, err := os.Open("./markdown/" + filename)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer mdfile.Close()
+
 	rawBytes, err := ioutil.ReadAll(mdfile)
 
 	// Get title from first line of file
 	lines := strings.Split(string(rawBytes), "\n")
-	title := strings.Replace(lines[0], "# ", "", -1)
-
-	_ = mdfile.Close()
+	post.Title = strings.Replace(lines[0], "# ", "", -1)
 
 	// Convert Markdown to HTML
-	html := blackfriday.Run(rawBytes)
-
-	// Create a Post struct
-	post := Post{
-		Title: title,
-		Body:  template.HTML(html),
-		Date:  date,
-		Slug:  slug,
-	}
+	body := blackfriday.Run(rawBytes)
+	post.Body = template.HTML(body)
 
 	// Save file
 	post.createFile()
@@ -90,35 +73,17 @@ func fNameWithoutExtension(fn string) string {
 	return strings.TrimSuffix(fn, path.Ext(fn))
 }
 
-func verifyFilenameBaseFormat(f string) {
-	errorDescription := "I can't parse this filename. Make sure its name is formatted as: DD-MM-YYY-slug.md"
-
-	if len(f) < 12 {
-		fmt.Println(errorDescription)
-		os.Exit(1)
+func ExtractMetaFromFilename(filename string) (Post, error) {
+	errorMessage := fmt.Sprintf("can't parse filename '%s', it should be in format 'YYYY-MM-DD-slug.md'", filename)
+	dateFormat := "2006-01-02"
+	slug := fNameWithoutExtension(filename)[len(dateFormat)+1:]
+	if len(slug) == 0 {
+		return Post{}, errors.New(errorMessage)
 	}
-
-	// 2019-10-24-Slug.md
-	//[0   45 78 10]
-
-	// year is int?
-	_, err3 := strconv.Atoi(f[0:4])
-	if err3 != nil {
-		fmt.Println(errorDescription)
-		os.Exit(1)
-	}
-
-	// month is int?
-	_, err2 := strconv.Atoi(f[5:7])
-	if err2 != nil {
-		fmt.Println(errorDescription)
-		os.Exit(1)
-	}
-
-	// day is int?
-	_, err := strconv.Atoi(f[8:10])
+	date, err := time.Parse(dateFormat, filename[:len(dateFormat)])
 	if err != nil {
-		fmt.Println(errorDescription)
-		os.Exit(1)
+		return Post{}, errors.New(errorMessage)
 	}
+
+	return Post{Slug: slug, Date: date}, nil
 }
