@@ -1,4 +1,4 @@
-FROM golang:1.13.3-alpine3.10 as builder
+FROM golang:1.13.4-alpine3.10 as builder
 ADD . /build
 WORKDIR /build
 RUN GO111MODULE=on CGO_ENABLED=0 go build -mod=vendor -o underblog ./app/main.go
