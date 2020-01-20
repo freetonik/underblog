@@ -10,7 +10,7 @@
     <h1>My blog</h1>
     <ul>
       {{ range . }}
-        <li><a href="/posts/{{ .Slug }}/">{{ .Title }}</a></li>
+        <li><a href="/posts/{{ .Slug }}/">{{ .Title }}</a> ({{ .Date.Format "Jan 02, 2006" }})</li>
       {{ end }}
     </ul>
   </div>
