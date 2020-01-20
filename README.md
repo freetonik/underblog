@@ -54,6 +54,16 @@ There is no front-matter. **Date** and **slug** are derived from the filename. *
 
 **Step 3:** Your site is generated in `public`.
 
+## Live preview
+
+Run underblog in watch mode:
+
+```
+underblog -watch
+```
+
+Then go to http://localhost:8080/. Changing markdown files will automatically re-generate the site.
+
 ## Features
 
 - NO front matter
