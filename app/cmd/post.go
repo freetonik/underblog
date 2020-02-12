@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/russross/blackfriday.v2"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -12,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"gopkg.in/russross/blackfriday.v2"
 )
 
 func NewPost(filename string) Post {
@@ -47,6 +48,10 @@ type Post struct {
 	Body  template.HTML
 	Date  time.Time
 	Slug  string
+}
+
+func (post *Post) getURL() string {
+	return fmt.Sprintf("/posts/%s", post.Slug)
 }
 
 func (post *Post) createFile() {

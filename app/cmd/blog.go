@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/freetonik/underblog/app/internal"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -14,6 +13,8 @@ import (
 	"path/filepath"
 	"sort"
 	"sync"
+
+	"github.com/freetonik/underblog/app/internal"
 )
 
 const DefaultMarkdownPath = "./markdown/"
@@ -36,6 +37,7 @@ func NewBlog(opts internal.Opts) *Blog {
 type Blog struct {
 	opts internal.Opts
 
+	meta      BlogMeta
 	files     chan os.FileInfo
 	Posts     []Post
 	indexPage io.Writer
@@ -156,15 +158,30 @@ func (b *Blog) copyCssToPublicDir() {
 }
 
 func (b *Blog) renderMd() error {
-	t, _ := template.ParseFiles("index.html")
+	t, err := template.New("index.html").
+		Funcs(b.getTemplateFuncs()).
+		ParseFiles("index.html")
+	if err != nil {
+		log.Fatalf("can't parse template: %v", err)
+	}
 	b.wg.Wait() // wait until b.Posts is populated
 	b.SortPosts()
-	err := t.Execute(b.indexPage, b.Posts)
+
+	err = t.Execute(b.indexPage, b.Posts)
 	if err != nil {
 		log.Fatalf("can't execute template: %v", err)
 	}
 	// todo: should i close file interface?
 	return nil
+}
+
+func (b *Blog) getTemplateFuncs() template.FuncMap {
+	b.meta = BlogMeta{}
+	return template.FuncMap{
+		"BlogLink":        b.meta.BlogLink,
+		"BlogTitle":       b.meta.BlogTitle,
+		"BlogDescription": b.meta.BlogDescription,
+	}
 }
 
 func (b *Blog) SortPosts() {
