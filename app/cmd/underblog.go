@@ -17,7 +17,7 @@ func MakeBlog(opts internal.Opts) error {
 
 	// support old template version without blog URL
 	if blog.meta.Link != "" {
-		if err := NewRSS(blog).Render(); err != nil {
+		if err := NewRSS(blog).Render("public/rss.xml"); err != nil {
 			return fmt.Errorf("can't render RSS: %v", err)
 		}
 	}

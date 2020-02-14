@@ -7,8 +7,6 @@ import (
 	"strings"
 	"text/template"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // RSS represents blog feed structure
@@ -57,23 +55,21 @@ func NewRSS(blog *Blog) *RSS {
 }
 
 // Render generates blog RSS feed and store it in a file
-func (r *RSS) Render() error {
+func (r *RSS) Render(path string) error {
+	feed := r.getFeedXML()
+
+	return ioutil.WriteFile(path, feed, os.ModePerm)
+}
+
+func (r *RSS) getFeedXML() []byte {
 	feed := r.getFeed()
 
-	out, err := xml.MarshalIndent(feed, "  ", "    ")
-	if err != nil {
-		return errors.Wrap(err, "can't encode RSS feed")
-	}
+	// skip an error check 'cause it will always return some result
+	out, _ := xml.MarshalIndent(feed, "  ", "    ")
 
 	// "dirty" hack for get self-closing tag
 	res := strings.Replace(string(out), "></atom:link>", " />", 1)
-
-	err = ioutil.WriteFile("public/rss.xml", []byte(res), os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "can't save RSS")
-	}
-
-	return nil
+	return []byte(res)
 }
 
 func (r *RSS) getFeed() *feed {
