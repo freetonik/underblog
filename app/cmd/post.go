@@ -15,6 +15,7 @@ import (
 	"gopkg.in/russross/blackfriday.v2"
 )
 
+// NewPost Converts a Markdown post to HTML
 func NewPost(filename string) Post {
 	post, err := ExtractMetaFromFilename(filename)
 	if err != nil {
@@ -43,6 +44,7 @@ func NewPost(filename string) Post {
 	return post
 }
 
+// Post Represents a post
 type Post struct {
 	Title string
 	Body  template.HTML
@@ -78,6 +80,7 @@ func fNameWithoutExtension(fn string) string {
 	return strings.TrimSuffix(fn, path.Ext(fn))
 }
 
+// ExtractMetaFromFilename Extracts slug and date from filename
 func ExtractMetaFromFilename(filename string) (Post, error) {
 	errorMessage := fmt.Sprintf("can't parse filename '%s', it should be in format 'YYYY-MM-DD-slug.md'", filename)
 	dateFormat := "2006-01-02"

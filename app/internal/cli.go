@@ -4,6 +4,7 @@ import (
 	"flag"
 )
 
+// Opts options of the command line
 type Opts struct {
 	Version   bool
 	WatchMode bool

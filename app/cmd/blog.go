@@ -17,9 +17,10 @@ import (
 	"github.com/freetonik/underblog/app/internal"
 )
 
+// DefaultMarkdownPath The folder where the markdown posts are stored
 const DefaultMarkdownPath = "./markdown/"
 
-// Create and initialize Blog
+// NewBlog Create and initialize Blog
 func NewBlog(opts internal.Opts) *Blog {
 	b := new(Blog)
 
@@ -49,13 +50,13 @@ type Blog struct {
 // Render md-files->HTML, generate root index.html
 func (b *Blog) Render() error {
 	if err := b.verifyMarkdownPresent(); err != nil {
-		log.Fatal(errors.New(fmt.Sprintf("Markdown directory is not found: %v", err)))
+		log.Fatal(fmt.Errorf("Markdown directory is not found: %v", err))
 	}
 
 	b.indexPage = b.getIndexPage(b.opts.Path)
 	b.createPosts()
 	err := b.renderMd()
-	b.copyCssToPublicDir()
+	b.copyCSSToPublicDir()
 
 	return err
 }
@@ -75,13 +76,13 @@ func (b *Blog) getIndexPage(currentPath string) io.Writer {
 	p := filepath.Join(rootPath, "public")
 	err := os.MkdirAll(p, os.ModePerm)
 	if err != nil {
-		log.Fatal(errors.New(fmt.Sprintf("Can't create public dir: %v", err)))
+		log.Fatal(fmt.Errorf("Can't create public dir: %v", err))
 	}
 
 	f, err := os.Create("public/index.html")
 
 	if err != nil {
-		log.Fatal(errors.New(fmt.Sprintf("Can't create public/index.html: %v", err)))
+		log.Fatal(fmt.Errorf("Can't create public/index.html: %v", err))
 	}
 
 	return f
@@ -134,7 +135,7 @@ func (b *Blog) createPosts() {
 	close(filesChan)
 }
 
-func (b *Blog) copyCssToPublicDir() {
+func (b *Blog) copyCSSToPublicDir() {
 	from, err := os.Open("./css/styles.css")
 	if err != nil {
 		log.Fatal(err)
@@ -184,6 +185,7 @@ func (b *Blog) getTemplateFuncs() template.FuncMap {
 	}
 }
 
+// SortPosts Sort posts
 func (b *Blog) SortPosts() {
 	sort.Slice(b.Posts, func(i, j int) bool {
 		return b.Posts[i].Date.Unix() > b.Posts[j].Date.Unix()

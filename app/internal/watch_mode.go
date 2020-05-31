@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// WatchForChangedFiles Rebuild the blog when files are changed
 func WatchForChangedFiles(rebuildBlog func()) {
 	w := watcher.New()
 
@@ -44,6 +45,7 @@ func WatchForChangedFiles(rebuildBlog func()) {
 	}
 }
 
+// RunDevelopmentWebserver Run the development server
 func RunDevelopmentWebserver() {
 	// todo: extract ./public to constant
 	http.Handle("/", http.FileServer(http.Dir("./public")))

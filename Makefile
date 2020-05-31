@@ -45,3 +45,9 @@ install: all
 
 build-docker:
 	docker build -t freetonik/underblog .
+
+fmt:
+	go fmt ./app/...
+
+lint: 
+	golint ./app/...
