@@ -5,7 +5,11 @@
 
 An extremely simple, fast static blog generator.
 
-## Install
+## Deploy to Netlify
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/lucas-deangelis/underblog-template)
+
+## Install locally
 
 On MacOS:
 
@@ -79,7 +83,7 @@ Then go to http://localhost:8080/. Changing markdown files will automatically re
 - [x] derive dates from filenames
 - [ ] RSS generation
 - [ ] Syntax highlighting for code with Chroma
-- [ ] live preview server (?)
+- [x] live preview server
 
 ---
 
